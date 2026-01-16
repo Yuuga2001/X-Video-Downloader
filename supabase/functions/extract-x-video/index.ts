@@ -162,15 +162,35 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      const videoResponse = await fetch(videoUrl, {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        },
-      });
+      const fetchVideo = async (headers: Record<string, string>) => {
+        return await fetch(videoUrl, { headers });
+      };
+
+      const baseHeaders = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "video/*,*/*;q=0.8",
+        "Referer": "https://x.com/",
+        "Origin": "https://x.com",
+      };
+
+      let videoResponse = await fetchVideo(baseHeaders);
+      if (!videoResponse.ok) {
+        videoResponse = await fetchVideo({
+          ...baseHeaders,
+          "Referer": "https://twitter.com/",
+          "Origin": "https://twitter.com",
+        });
+      }
+      if (!videoResponse.ok) {
+        videoResponse = await fetchVideo({
+          "User-Agent": baseHeaders["User-Agent"],
+          "Accept": baseHeaders["Accept"],
+        });
+      }
 
       if (!videoResponse.ok) {
         return new Response(
-          JSON.stringify({ error: "Failed to fetch video" }),
+          JSON.stringify({ error: `Failed to fetch video (${videoResponse.status})` }),
           {
             status: videoResponse.status,
             headers: {
