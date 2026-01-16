@@ -8,6 +8,132 @@ interface RequestBody {
   url: string;
 }
 
+const extractTweetId = (postUrl: string): string | null => {
+  const match = postUrl.match(/status\/(\d+)/);
+  return match ? match[1] : null;
+};
+
+const pickBestMp4Variant = (variants: Array<{ url?: string; content_type?: string; bitrate?: number }>) => {
+  const mp4s = variants
+    .filter((variant) => variant.url && variant.content_type === "video/mp4")
+    .sort((a, b) => (b.bitrate ?? 0) - (a.bitrate ?? 0));
+  return mp4s[0]?.url ?? null;
+};
+
+const collectMediaCandidates = (data: unknown) => {
+  const results: Array<Record<string, unknown>> = [];
+  const seen = new Set<object>();
+  const queue: unknown[] = [data];
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (!current || typeof current !== "object") {
+      continue;
+    }
+    if (seen.has(current as object)) {
+      continue;
+    }
+    seen.add(current as object);
+
+    if (Array.isArray(current)) {
+      for (const item of current) {
+        queue.push(item);
+      }
+      continue;
+    }
+
+    const obj = current as Record<string, unknown>;
+    for (const [key, value] of Object.entries(obj)) {
+      if ((key === "mediaDetails" || key === "media") && Array.isArray(value)) {
+        results.push(...(value as Array<Record<string, unknown>>));
+        continue;
+      }
+      queue.push(value);
+    }
+  }
+
+  return results;
+};
+
+const collectMp4Urls = (data: unknown) => {
+  const results: string[] = [];
+  const seen = new Set<object>();
+  const queue: unknown[] = [data];
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (!current || typeof current !== "object") {
+      if (typeof current === "string" && current.includes(".mp4")) {
+        results.push(current);
+      }
+      continue;
+    }
+    if (seen.has(current as object)) {
+      continue;
+    }
+    seen.add(current as object);
+
+    if (Array.isArray(current)) {
+      for (const item of current) {
+        queue.push(item);
+      }
+      continue;
+    }
+
+    const obj = current as Record<string, unknown>;
+    for (const value of Object.values(obj)) {
+      queue.push(value);
+    }
+  }
+
+  return results;
+};
+
+const decodeUrl = (url: string) => url.replace(/\\u0026/g, "&").replace(/\\\//g, "/");
+
+const fetchJson = async (url: string) => {
+  const response = await fetch(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Accept": "application/json",
+      "Accept-Language": "en-US,en;q=0.5",
+    },
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  try {
+    const json = await response.json();
+    if (json && typeof json === "object") {
+      return json;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+};
+
+const fetchThirdPartyData = async (tweetId: string) => {
+  const endpoints = [
+    `https://api.vxtwitter.com/Twitter/status/${tweetId}`,
+    `https://api.vxtwitter.com/status/${tweetId}`,
+    `https://api.fxtwitter.com/status/${tweetId}`,
+    `https://api.fxtwitter.com/Twitter/status/${tweetId}`,
+  ];
+
+  for (const endpoint of endpoints) {
+    const data = await fetchJson(endpoint);
+    if (data && Object.keys(data as Record<string, unknown>).length > 0) {
+      return data;
+    }
+  }
+
+  return null;
+};
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, {
@@ -81,19 +207,12 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const response = await fetch(postUrl, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.5",
-      },
-    });
-
-    if (!response.ok) {
+    const tweetId = extractTweetId(postUrl);
+    if (!tweetId) {
       return new Response(
-        JSON.stringify({ error: "Failed to fetch post" }),
+        JSON.stringify({ error: "Invalid X/Twitter status URL" }),
         {
-          status: response.status,
+          status: 400,
           headers: {
             ...corsHeaders,
             "Content-Type": "application/json",
@@ -102,44 +221,59 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const html = await response.text();
+    const syndicationUrl = `https://cdn.syndication.twimg.com/tweet-result?id=${tweetId}&lang=en`;
+    let data = await fetchJson(syndicationUrl);
 
+    if (!data || Object.keys(data as Record<string, unknown>).length === 0) {
+      data = await fetchThirdPartyData(tweetId);
+    }
+
+    if (!data) {
+      return new Response(
+        JSON.stringify({ error: "Failed to fetch post metadata" }),
+        {
+          status: 502,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    }
+
+    const mediaCandidates = collectMediaCandidates(data);
     let videoUrl: string | null = null;
 
-    // Method 1: Look for MP4 URLs in meta tags (og:video, twitter:player:stream)
-    const metaVideoMatch = html.match(/<meta\s+(?:property|name)="(?:og:video|twitter:player:stream)"\s+content="([^"]*\.(?:mp4|m3u8)[^"]*)"/i);
-    if (metaVideoMatch) {
-      videoUrl = metaVideoMatch[1];
-    }
+    for (const media of mediaCandidates) {
+      const mediaType = media?.type;
+      if (mediaType && mediaType !== "video" && mediaType !== "animated_gif") {
+        continue;
+      }
 
-    // Method 2: Search for URLs with common video CDN patterns
-    if (!videoUrl) {
-      const cdnMatch = html.match(/(https:\/\/[^\s"<>]*(?:pbs\.twimg\.com|video\.twimg\.com|media\.twimg\.com)[^\s"<>]*\.mp4[^\s"<>]*)/i);
-      if (cdnMatch) {
-        videoUrl = cdnMatch[1];
+      const variants = Array.isArray(media?.video_info?.variants)
+        ? (media.video_info as { variants: Array<Record<string, unknown>> }).variants
+        : Array.isArray(media?.video_variants)
+          ? (media.video_variants as Array<Record<string, unknown>>)
+          : Array.isArray(media?.variants)
+            ? (media.variants as Array<Record<string, unknown>>)
+            : [];
+
+      if (variants.length === 0) {
+        continue;
+      }
+
+      videoUrl = pickBestMp4Variant(
+        variants as Array<{ url?: string; content_type?: string; bitrate?: number }>
+      );
+      if (videoUrl) {
+        break;
       }
     }
 
-    // Method 3: Look for video_info or media structure in embedded JSON
     if (!videoUrl) {
-      const jsonMatch = html.match(/"video_info":\s*\{([^}]*"variants"[^}]*)\}/s);
-      if (jsonMatch) {
-        const variantsMatch = html.match(/"variants":\s*\[(.*?)\]\s*(?:,|\})/s);
-        if (variantsMatch) {
-          const variantsText = variantsMatch[1];
-          const mp4Match = variantsText.match(/"url"\s*:\s*"(https:\/\/[^"]*\.mp4[^"]*)"/);
-          if (mp4Match) {
-            videoUrl = mp4Match[1].replace(/\\u0026/g, "&").replace(/\\\//g, "/");
-          }
-        }
-      }
-    }
-
-    // Method 4: Broader search for any MP4 URLs in the HTML
-    if (!videoUrl) {
-      const broadMatch = html.match(/(https:\/\/[^\s"<>]*\.mp4[^\s"<>]*)/i);
-      if (broadMatch) {
-        videoUrl = broadMatch[1];
+      const mp4Urls = collectMp4Urls(data).map(decodeUrl);
+      if (mp4Urls.length > 0) {
+        videoUrl = mp4Urls[0];
       }
     }
 
