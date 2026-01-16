@@ -1,14 +1,14 @@
+# X Video Downloader
+
+X（旧Twitter）のポストURLを貼るだけで、対象ポストの動画を抽出・保存できるWebアプリです。  
+Paste a post URL to extract and download the video in seconds.
+
 <a href="https://x-video-downloader.riverapp.jp/" target="_blank">
   <img src="https://img.shields.io/badge/今すぐ利用する-34D399?style=for-the-badge" alt="今すぐ利用する">
 </a>
 <a href="https://x-video-downloader.riverapp.jp/" target="_blank">
   <img src="https://img.shields.io/badge/Start_App-34D399?style=for-the-badge" alt="Start App">
 </a>
-
-# X Video Downloader
-
-X（旧Twitter）のポストURLを貼るだけで、対象ポストの動画を抽出・保存できるWebアプリです。  
-Paste a post URL to extract and download the video in seconds.
 
 ![App Screenshot](public/screenshot.png)
 
