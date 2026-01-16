@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://x-post-downloader.riverapp.jp/sitemap.xml
+Sitemap: https://x-video-downloader.riverapp.jp/sitemap.xml

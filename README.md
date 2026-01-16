@@ -1,7 +1,7 @@
-<a href="https://x-post-downloader.riverapp.jp/" target="_blank">
+<a href="https://x-video-downloader.riverapp.jp/" target="_blank">
   <img src="https://img.shields.io/badge/今すぐ利用する-34D399?style=for-the-badge" alt="今すぐ利用する">
 </a>
-<a href="https://x-post-downloader.riverapp.jp/" target="_blank">
+<a href="https://x-video-downloader.riverapp.jp/" target="_blank">
   <img src="https://img.shields.io/badge/Start_App-34D399?style=for-the-badge" alt="Start App">
 </a>
 
