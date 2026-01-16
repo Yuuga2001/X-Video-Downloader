@@ -1,15 +1,65 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Download, AlertCircle, Loader2 } from 'lucide-react';
+
+type Language = 'ja' | 'en';
+
+const translations = {
+  ja: {
+    title: 'X 動画ダウンローダー',
+    subtitle: 'ポストのURLを入力して動画を保存',
+    placeholder: 'https://x.com/username/status/...',
+    extract: '動画を抽出',
+    processing: '処理中...',
+    found: '動画を見つけました！',
+    download: '動画を保存',
+    faq: '使い方・FAQ',
+    footer: '公開ポストのみ対応 | 動画データはサーバーに保存されません',
+    errors: {
+      enterUrl: 'URLを入力してください',
+      generic: 'エラーが発生しました。もう一度お試しください。',
+      extract: '動画の抽出に失敗しました',
+    },
+    langLabel: 'English',
+    langHref: '?lang=en',
+  },
+  en: {
+    title: 'X Video Downloader',
+    subtitle: 'Paste a post URL to extract and download the video',
+    placeholder: 'https://x.com/username/status/...',
+    extract: 'Extract Video',
+    processing: 'Processing...',
+    found: 'Video found!',
+    download: 'Download Video',
+    faq: 'How to Use / FAQ',
+    footer: 'Public posts only | Videos are not stored on our server',
+    errors: {
+      enterUrl: 'Please enter a URL.',
+      generic: 'Something went wrong. Please try again.',
+      extract: 'Failed to extract video.',
+    },
+    langLabel: '日本語',
+    langHref: '/',
+  },
+};
 
 function App() {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
+  const lang = useMemo<Language>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('lang') === 'en' ? 'en' : 'ja';
+  }, []);
+  const t = translations[lang];
+
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
 
   const handleExtract = async () => {
     if (!url.trim()) {
-      setError('URLを入力してください');
+      setError(t.errors.enterUrl);
       return;
     }
 
@@ -32,13 +82,13 @@ function App() {
       const data = await response.json();
 
       if (!response.ok || data.error) {
-        setError(data.error || '動画の抽出に失敗しました');
+        setError(data.error || t.errors.extract);
         return;
       }
 
       setVideoUrl(data.videoUrl);
     } catch (err) {
-      setError('エラーが発生しました。もう一度お試しください。');
+      setError(t.errors.generic);
     } finally {
       setLoading(false);
     }
@@ -61,12 +111,21 @@ function App() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
         <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-800 mb-2">
-              X 動画ダウンローダー
+          <div className="text-center mb-8 space-y-2">
+            <div className="flex items-center justify-center gap-3 text-xs text-slate-500">
+              <a className="hover:text-slate-700 underline underline-offset-4" href={t.langHref}>
+                {t.langLabel}
+              </a>
+              <span className="text-slate-300">|</span>
+              <a className="hover:text-slate-700 underline underline-offset-4" href="/faq.html">
+                {t.faq}
+              </a>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold text-slate-800 mb-1">
+              {t.title}
             </h1>
             <p className="text-slate-600">
-              ポストのURLを入力して動画を保存
+              {t.subtitle}
             </p>
           </div>
 
@@ -77,7 +136,7 @@ function App() {
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleExtract()}
-                placeholder="https://x.com/username/status/..."
+                placeholder={t.placeholder}
                 className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 transition-colors text-slate-800"
                 disabled={loading}
               />
@@ -91,10 +150,10 @@ function App() {
               {loading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  処理中...
+                  {t.processing}
                 </>
               ) : (
-                '動画を抽出'
+                t.extract
               )}
             </button>
 
@@ -108,14 +167,14 @@ function App() {
             {videoUrl && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-6 space-y-4">
                 <p className="text-green-800 font-medium text-center">
-                  動画を見つけました！
+                  {t.found}
                 </p>
                 <button
                   onClick={handleDownload}
                   className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
                   <Download className="w-5 h-5" />
-                  動画を保存
+                  {t.download}
                 </button>
               </div>
             )}
@@ -123,7 +182,7 @@ function App() {
 
           <div className="mt-8 pt-6 border-t border-slate-200">
             <p className="text-xs text-slate-500 text-center">
-              公開ポストのみ対応 | 動画データはサーバーに保存されません
+              {t.footer}
             </p>
           </div>
         </div>
