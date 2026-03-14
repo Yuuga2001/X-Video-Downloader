@@ -68,13 +68,12 @@ function App() {
     setVideoUrl('');
 
     try {
-      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/extract-x-video`;
+      const apiUrl = import.meta.env.VITE_API_URL;
 
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
         },
         body: JSON.stringify({ url: url.trim() }),
       });
@@ -96,7 +95,7 @@ function App() {
 
   const handleDownload = () => {
     if (videoUrl) {
-      const downloadUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/extract-x-video/download?videoUrl=${encodeURIComponent(videoUrl)}`;
+      const downloadUrl = `${import.meta.env.VITE_API_URL}/download?videoUrl=${encodeURIComponent(videoUrl)}`;
       const link = document.createElement('a');
       link.href = downloadUrl;
       link.download = 'video.mp4';
