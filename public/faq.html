@@ -34,10 +34,26 @@
           },
           {
             "@type": "Question",
-            "name": "公開ポスト以外は対応していますか？",
+            "name": "どのような動画がダウンロードできますか？",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "公開ポストのみ対応しています。鍵付きアカウントや削除済みの投稿は取得できません。"
+              "text": "ご自身が権利を持つ動画、または投稿者から利用許諾を得たポストの動画のみをダウンロード対象としてください。第三者の権利を侵害する目的での利用はお断りします。"
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "ダウンロードできない動画はありますか？",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "次のいずれかに該当する動画はX側の仕様によりダウンロードできません: (1) 非公開アカウント（鍵垢）の投稿の動画、(2) 削除されたポストの動画、(3) X側でセンシティブな内容と判定された動画、(4) 外部サイトのリンクカード（Twitter Card）が添付されたポストの動画、(5) 長尺動画、(6) 認証や年齢確認が必要なポストの動画。"
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "動画が突然取得できなくなりました。なぜですか？",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "本アプリはX側の公開APIを利用して動画情報を取得しているため、X側のAPI仕様変更により予告なく動画抽出が停止する場合があります。開発者はこれらの停止について事前通知や復旧を保証するものではありません。"
             }
           },
           {
@@ -46,6 +62,38 @@
             "acceptedAnswer": {
               "@type": "Answer",
               "text": "No. The app only proxies the download and does not store videos on the server."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Which videos can I download?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Use this app only to download videos that you own the rights to, or videos for which you have obtained explicit permission from the poster. Do not use it to infringe third-party rights."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Why can't I download some videos?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Due to X's specifications, the following videos cannot be downloaded: (1) videos from private (locked) accounts, (2) videos in deleted posts, (3) videos flagged as sensitive by X, (4) videos in posts with external link cards attached, (5) long-form videos, (6) videos in posts requiring authentication or age verification."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "iOSアプリ版で動画が保存できません",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "iOSアプリ版では写真アプリへのアクセス許可が必要です。許可していない場合、ダウンロードした動画を端末に保存できません。iOSの「設定」アプリから「X動画ダウンローダー」→「写真」を選んでアクセスを許可してください。"
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "I can't save videos in the iOS app",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "The iOS app requires access to the Photos app. Without this permission, downloaded videos cannot be saved to your device. Open the iOS Settings app → \"X Video Downloader\" → \"Photos\" and grant access."
             }
           }
         ]
@@ -132,15 +180,69 @@
     </div>
 
     <div class="card">
-      <h2>注意事項</h2>
-      <p>公開ポストのみ対応しています。非公開・削除済みの投稿は取得できません。</p>
-      <p>利用する際はXの利用規約・著作権に従ってください。</p>
+      <h2>ご利用条件（重要）</h2>
+      <p>
+        本アプリは、<strong>ご自身が権利を持つ動画、または投稿者から利用許諾を得たポストの動画</strong>のダウンロードにのみご利用ください。
+        第三者の権利を侵害する目的での利用は固くお断りします。
+      </p>
+      <p>ダウンロードした動画は、Xの利用規約および各国の著作権法に従って取り扱ってください。権利者の許諾なく動画を再配布・公開・SNSへの再投稿・商用利用することはできません。</p>
     </div>
 
     <div class="card">
-      <h2>Notes</h2>
-      <p>Only public posts are supported. Private or deleted posts cannot be fetched.</p>
-      <p>Please comply with X terms and copyright when downloading videos.</p>
+      <h2>ダウンロードできない動画</h2>
+      <p>次のいずれかに該当する動画は、X側の仕様により本アプリでは取得できません。</p>
+      <ul>
+        <li>非公開アカウント（いわゆる鍵垢）の投稿に含まれる動画</li>
+        <li>削除されたポストの動画</li>
+        <li>X側でセンシティブな内容と判定された動画</li>
+        <li>外部サイトのリンクカード（Twitter Card / リンクプレビュー）が添付されたポストの動画</li>
+        <li>長尺動画（X側の配信仕様による上限を超える長さの動画）</li>
+        <li>認証や年齢確認、フォローが必要なポストの動画</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>サービスの継続性について</h2>
+      <p>本アプリはX側の公開API（シンジケーションAPIおよびサードパーティ公開API）を利用しています。X側のAPI仕様変更や提供停止により、<strong>予告なく動画抽出機能が停止する場合があります</strong>。開発者はこれらの停止について事前通知や復旧を保証するものではありません。</p>
+    </div>
+
+    <div class="card">
+      <h2>iOSアプリ版をご利用の方へ</h2>
+      <p>iOSアプリ版では、ダウンロードした動画をカメラロールに保存するために、<strong>写真アプリへのアクセス許可</strong>が必要です。許可しない場合、ダウンロードした動画を端末に保存することはできません。</p>
+      <p>一度拒否してしまった場合は、iOSの「設定」アプリから「X動画ダウンローダー」→「写真」を選び、アクセスを許可してください。本アプリは「追加のみ」の権限を要求しており、既存の写真・動画を読み取ることはありません。</p>
+    </div>
+
+    <div class="card">
+      <h2>Conditions of Use (Important)</h2>
+      <p>
+        Use this app only to download <strong>videos that you own the rights to, or videos for which you have obtained explicit permission from the poster</strong>.
+        Use of the app to infringe third-party rights is strictly prohibited.
+      </p>
+      <p>Comply with X's terms of service and applicable copyright laws when handling downloaded videos. You may not redistribute, republish, repost to social media, or commercially use the videos without permission from the rights holder.</p>
+    </div>
+
+    <div class="card">
+      <h2>Videos that cannot be downloaded</h2>
+      <p>Due to X's specifications, the following videos cannot be retrieved by this app.</p>
+      <ul>
+        <li>Videos in posts from private (locked) accounts</li>
+        <li>Videos in deleted posts</li>
+        <li>Videos flagged as sensitive content by X</li>
+        <li>Videos in posts with external link cards (Twitter Card / link previews) attached</li>
+        <li>Long-form videos (videos exceeding length limits set by X)</li>
+        <li>Videos in posts requiring authentication, age verification, or following</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Service Availability</h2>
+      <p>This app relies on public APIs operated by X (the syndication API and third-party public APIs). <strong>Video extraction may become unavailable without notice</strong> due to changes in X's API specifications or service termination. The developer does not guarantee advance notice or recovery.</p>
+    </div>
+
+    <div class="card">
+      <h2>For iOS App Users</h2>
+      <p>The iOS app requires access to the <strong>Photos app</strong> in order to save downloaded videos to your camera roll. Without this permission, downloaded videos cannot be saved to your device.</p>
+      <p>If you previously denied access, open the iOS Settings app → "X Video Downloader" → "Photos" and grant access. The app uses "add-only" permission and does not read your existing photos or videos.</p>
     </div>
   </main>
 </body>
